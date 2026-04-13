@@ -7,12 +7,12 @@
 // 1. Hàm loadProducts mới: Nhận cả Loại (cat) và Từ khóa (q)
 function loadProducts(category = '', searchQuery = '') {
     let url = '/product/getProductsByCate';
-    
+
     // Tạo mảng để chứa các tham số
     let params = [];
     if (category) params.push(`cat=${encodeURIComponent(category)}`);
     if (searchQuery) params.push(`q=${encodeURIComponent(searchQuery)}`);
-    
+
     // Nếu có tham số thì nối vào URL
     if (params.length > 0) {
         url += '?' + params.join('&');
@@ -21,7 +21,7 @@ function loadProducts(category = '', searchQuery = '') {
     $.ajax({
         url: url,
         type: 'GET',
-        success: function(data) {
+        success: function (data) {
             const container = $('#product-list-api');
             container.empty();
 
@@ -59,6 +59,6 @@ function searchProducts() {
 }
 
 // 3. Khởi tạo
-$(document).ready(function() {
+$(document).ready(function () {
     loadProducts();
 });

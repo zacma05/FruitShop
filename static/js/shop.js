@@ -1,48 +1,48 @@
-// Hàm format tiền tệ
-const formatVND = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-
 const fetchProducts = () => {
-    const apiUrl = 'http://127.0.0.1:5000/api/products';
     const container = document.getElementById('product-container');
+    if (!container) return;
 
-    fetch(apiUrl)
+    fetch('http://127.0.0.1:5000/products')
         .then(res => res.json())
         .then(products => {
-            if (!products || products.length === 0) {
-                container.innerHTML = '<p>Không có sản phẩm nào.</p>';
-                return;
-            }
-            console.log(products);
-            // Render dữ liệu
             container.innerHTML = products.map(product => `
                 <div class="col-md-6 col-lg-6 col-xl-4">
-                    <div class="rounded position-relative fruite-item border border-secondary border-bottom-0 h-100 d-flex flex-column">
+                    <div class="rounded position-relative fruite-item border border-secondary h-100 d-flex flex-column">
                         <div class="fruite-img">
-                            <img src="/static/img/products${product.ProductImage}" class="img-fluid w-100 rounded-top" alt="${product.Name}"">
+                            <img src="${product.ProductImage}" class="img-fluid w-100 rounded-top" alt="${product.ProductName}">
                         </div>
-                        <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">
-                            ${product.Category}
-                        </div>
-                        <div class="p-4 border border-secondary border-top-0 rounded-bottom flex-grow-1 d-flex flex-column">
+                        <div class="p-4 flex-grow-1 d-flex flex-column">
                             <h4>${product.ProductName}</h4>
-                            <p class="flex-grow-1">${product.Descript || 'Trái cây tươi ngon nhập khẩu mỗi ngày...'}</p>
+                            <p class="flex-grow-1 text-truncate">${product.Descript || 'Trái cây tươi ngon...'}</p>
                             <div class="d-flex justify-content-between flex-lg-wrap">
                                 <p class="text-dark fs-5 fw-bold mb-0">${formatVND(product.Price)}</p>
-                                <a href="javascript:void(0)" onclick="addToCart(${product.ProductID})" 
-                                   class="btn border border-secondary rounded-pill px-3 text-primary">
-                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
-                                </a>
+                                <button onclick="addToCart(${product.ProductID})" class="btn border border-secondary rounded-pill px-3 text-primary">
+                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Add
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             `).join('');
-        })
-        .catch(err => {
-            console.error(err);
-            container.innerHTML = '<p class="text-danger">Lỗi tải dữ liệu!</p>';
         });
 };
 
-// Gọi hàm khi trang web tải xong
+function addToCart(productId) {
+    const userId = localStorage.getItem("accountID"); // ĐÃ ĐỒNG BỘ
+    if (!userId) {
+        alert("Bạn cần đăng nhập để mua hàng!");
+        window.location.href = "login.html";
+        return;
+    }
+
+    fetch('http://127.0.0.1:5000/api/add_to_cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: userId, product_id: productId })
+    })
+        .then(res => res.json())
+        .then(data => alert("Đã thêm vào giỏ hàng thành công!"))
+        .catch(err => alert("Lỗi kết nối server!"));
+}
+
 document.addEventListener('DOMContentLoaded', fetchProducts);

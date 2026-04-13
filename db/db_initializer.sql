@@ -71,12 +71,23 @@ VALUES
     (4, 4, 5),
     (5, 5, 2);
 
-select * from tblAccount
-select * from tblCart
-select * from tblInvoice
-select * from tblInvoiceDetail
-select * from tblOrder
-select * from tblPayment
-select * from tblProduct
+select *
+from tblAccount
+select *
+from tblCart
+select *
+from tblInvoice
+select *
+from tblInvoiceDetail
+select *
+from tblOrder
+select *
+from tblPayment
+select *
+from tblProduct
 
-update tblProduct set ProductImage = '/static/img/products/apple.jpg'
+update tblProduct set ProductImage = '/static/img/products/apple.jpg' where ProductID =1;
+update tblProduct set ProductImage = '/static/img/products/banana.jpg' where ProductID =2;
+update tblProduct set ProductImage = '/static/img/products/orange.jpg' where ProductID =3;
+update tblProduct set ProductImage = '/static/img/products/carrot.jpg' where ProductID =4;
+update tblProduct set ProductImage = '/static/img/products/broccoli.jpg' where ProductID =5;

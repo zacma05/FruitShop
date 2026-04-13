@@ -1,13 +1,105 @@
-function generateQRCode() {
+// Lắng nghe mỗi khi người dùng tick chọn loại phí ship
+document.addEventListener('change', function (e) {
+    if (e.target && e.target.name === 'shipping') {
+        calculateFinalTotal();
+    }
+});
+if (typeof formatVND !== 'function') {
+    window.formatVND = function (n) {
+        return n.toLocaleString('it-IT', { style: 'currency', currency: 'VND' }).replace('VND', 'VNĐ');
+    };
+}
+async function loadCheckoutData() {
+    const userId = localStorage.getItem("accountID");
+    const container = document.getElementById('checkout-cart-items');
+    const subtotalEl = document.getElementById('subtotal');
 
-    let rawAmount = $('#total').text()
-    
-    let realAmount = rawAmount.replace(/[^0-9]/g, ""); 
+    if (!container || !userId) return;
+
+    try {
+        const res = await fetch(`http://127.0.0.1:5000/api/get_cart/${userId}`);
+        const cartItems = await res.json();
+        let subtotal = 0;
+
+        if (cartItems.length === 0) {
+            container.innerHTML = '<tr><td colspan="5" class="text-center">Giỏ hàng trống</td></tr>';
+            return;
+        }
+
+        container.innerHTML = cartItems.map(item => {
+            const itemTotal = item.Price * item.Quantity;
+            subtotal += itemTotal;
+
+            // Fix đường dẫn ảnh cho Flask
+            let imgPath = item.ProductImage;
+            if (!imgPath.startsWith('/static')) {
+                imgPath = imgPath.startsWith('/') ? `/static${imgPath}` : `/static/${imgPath}`;
+            }
+
+            return `
+                <tr>
+                    <th scope="row">
+                        <div class="d-flex align-items-center mt-2">
+                            <img src="${imgPath}" class="img-fluid rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                        </div>
+                    </th>
+                    <td class="py-5">${item.ProductName}</td>
+                    <td class="py-5">${formatVND(item.Price)}</td>
+                    <td class="py-5 text-center">${item.Quantity}</td>
+                    <td class="py-5">${formatVND(itemTotal)}</td>
+                </tr>`;
+        }).join('');
+
+        // Hiển thị tạm tính
+        subtotalEl.innerText = formatVND(subtotal);
+
+        // Gọi hàm tính tổng cuối cùng (bao gồm ship)
+        calculateFinalTotal();
+
+    } catch (err) {
+        console.error("Lỗi load checkout:", err);
+    }
+}
+
+// 2. Hàm tính tổng tiền cuối cùng = Subtotal + Shipping
+function calculateFinalTotal() {
+    const subtotalText = document.getElementById('subtotal').innerText;
+    // Chuyển đổi "260.000 VNĐ" thành số 260000
+    const subtotal = parseInt(subtotalText.replace(/\D/g, '')) || 0;
+
+    // Lấy giá trị phí ship từ radio button đang được chọn
+    const shippingRadio = document.querySelector('input[name="shipping"]:checked');
+    const shippingFee = shippingRadio ? parseInt(shippingRadio.value) : 0;
+
+    const finalTotalEl = document.getElementById('final-total');
+    if (finalTotalEl) {
+        finalTotalEl.innerText = formatVND(subtotal + shippingFee);
+    }
+}
+
+// 3. Lắng nghe sự kiện thay đổi phí ship khi người dùng click chọn
+document.addEventListener('change', function (e) {
+    if (e.target && e.target.name === 'shipping') {
+        calculateFinalTotal();
+    }
+});
+
+// Chạy khi trang web tải xong
+document.addEventListener('DOMContentLoaded', loadCheckoutData);
+function generateQRCode() {
+    // Lấy số tiền từ giao diện (đã được render ở bước trên)
+    const finalTotalText = document.getElementById('final-total').innerText;
+    const realAmount = finalTotalText.replace(/\D/g, "");
+
+    if (!realAmount || realAmount === "0") {
+        alert("Giỏ hàng trống, không thể tạo mã thanh toán!");
+        return;
+    }
 
     let requestData = {
         "accountNo": "4530072005",
-        "accountName": "Phùng Tuấn Đạt", 
-        "acqId": "970422", 
+        "accountName": "Phùng Tuấn Đạt",
+        "acqId": "970422",
         "addInfo": "Thanh toan don hang Fruitables",
         "amount": realAmount,
         "template": "compact"
@@ -22,17 +114,20 @@ function generateQRCode() {
             'Content-Type': 'application/json'
         },
         data: JSON.stringify(requestData),
-        success: function(response) {
-            if(response.code == "00") {
+        success: function (response) {
+            if (response.code == "00") {
                 $('#qr-image').attr('src', response.data.qrDataURL);
-                $('#qr-amount').text(rawAmount); // Hiện số tiền gốc cho khách xem
-                $('#qr-container').fadeIn();     // Hiện vùng chứa QR
+                $('#qr-amount').text(formatVND(parseInt(realAmount)));
+                $('#qr-container').fadeIn();
+                $('html, body').animate({
+                    scrollTop: $("#qr-container").offset().top - 100
+                }, 500);
             } else {
                 alert("Lỗi tạo mã QR: " + response.desc);
             }
         },
-        error: function() {
-            alert("Không thể kết nối với máy chủ thanh toán!");
+        error: function () {
+            alert("Không thể kết nối đến server VietQR");
         }
     });
 }
