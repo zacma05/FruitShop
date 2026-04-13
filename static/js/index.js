@@ -6,7 +6,7 @@
 // 2. Hàm AJAX lấy sản phẩm
 // 1. Hàm loadProducts mới: Nhận cả Loại (cat) và Từ khóa (q)
 function loadProducts(category = '', searchQuery = '') {
-    let url = '/api/products';
+    let url = '/product/getProductsByCate';
     
     // Tạo mảng để chứa các tham số
     let params = [];
@@ -35,7 +35,7 @@ function loadProducts(category = '', searchQuery = '') {
                 <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                     <div class="rounded border border-secondary d-flex flex-column h-100">
                         <div class="fruite-img">
-                            <img src="/static/${p.image}" class="img-fluid w-100 rounded-top" style="height:200px; object-fit:cover;">
+                            <img src="/static/img/products/${p.image}" class="img-fluid w-100 rounded-top" style="height:200px; object-fit:cover;">
                         </div>
                         <div class="p-4 d-flex flex-column flex-grow-1">
                             <h4>${p.name}</h4>

@@ -9,36 +9,20 @@ CORS(app)
 cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=DATPHUNG;DATABASE=Fruitables;Trusted_Connection=yes'
 conn = pyodbc.connect(cn_str)
 
-<<<<<<< HEAD
-def get_db_connection():
-    return pyodbc.connect(cn_str)
-
-# --- ROUTES GIAO DIỆN ---
-=======
 # account management
 @app.route("/login")
 def login_page():
-    return flask.render_template("login.html")
->>>>>>> 31eda13 (fix: database column's names, change image link)
+    return render_template("login.html")
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/templates/login")
-def login_page():
-    return render_template("login.html")
-
 
 @app.route("/login", methods=["POST"])
 def login():
-<<<<<<< HEAD
     # Dùng request trực tiếp vì đã import ở trên
     data = request.get_json(force=True)
-=======
-    data = flask.request.get_json(force=True)
-
->>>>>>> 31eda13 (fix: database column's names, change image link)
     username = data.get("username")
     password = data.get("password")
 
@@ -82,13 +66,13 @@ def get_products():
     
 @app.route("/shop")
 def route_page():
-    return flask.render_template("shop.html")
+    return render_template("shop.html")
 
 
 # API lấy danh sách sản phẩm cho file shop.js của bạn
 # API lấy danh sách sản phẩm
 @app.route("/api/products", methods=["GET"])
-def get_products():
+def get_all_products():
     cursor = conn.cursor()
     
     cursor.execute("SELECT ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage FROM tblProduct")
@@ -106,11 +90,7 @@ def get_products():
             "Discount": row[6],    
             "ProductImage": row[7]
         })
-<<<<<<< HEAD
     return jsonify(result)
-=======
-    return flask.jsonify(result)
->>>>>>> 31eda13 (fix: database column's names, change image link)
 
 if __name__ == "__main__":
     app.run(port=5000)
