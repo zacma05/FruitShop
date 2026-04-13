@@ -1,6 +1,6 @@
 import secrets
 import pyodbc
-import flask 
+import flask
 from flask_cors import CORS
 
 app = flask.Flask(__name__)
@@ -10,7 +10,7 @@ cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=DATPHUNG;DATABASE=Fruita
 conn = pyodbc.connect(cn_str)
 
 # account management
-@app.route("/templates/login")
+@app.route("/login")
 def login_page():
     return flask.render_template("login.html")
 
@@ -43,5 +43,35 @@ def login():
         "token": token,
         "user": row[0]
     })
+
+@app.route("/shop")
+def route_page():
+    return flask.render_template("shop.html")
+
+
+# API lấy danh sách sản phẩm cho file shop.js của bạn
+# API lấy danh sách sản phẩm
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage FROM tblProduct")
+    
+    rows = cursor.fetchall()
+    result = []
+    for row in rows:
+        result.append({
+            "ProductID": row[0],
+            "ProductName": row[1],
+            "Category": row[2],
+            "Price": float(row[3]), 
+            "Stock": row[4], 
+            "Descript": row[5],
+            "Discount": row[6],    
+            "ProductImage": row[7]
+        })
+    return flask.jsonify(result)
+
 if __name__ == "__main__":
     app.run(port=5000)
+
