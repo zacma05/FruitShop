@@ -6,10 +6,11 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-CN_STR = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=LAPTOP-C8E5HODE;DATABASE=Fruitables;Trusted_Connection=yes'
+cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=ADMIN-PC;DATABASE=Fruitables;Trusted_Connection=yes'
+conn = pyodbc.connect(cn_str)
 
 def get_db_connection():
-    return pyodbc.connect(CN_STR)
+    return pyodbc.connect(cn_str)
 
 # --- ROUTES GIAO DIỆN ---
 
@@ -29,7 +30,6 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT * FROM tblAccount WHERE AccountID = ? AND Password = ?",
@@ -37,7 +37,6 @@ def login():
     )
 
     row = cursor.fetchone()
-    conn.close() 
 
     if not row:
         return jsonify({"error": "Sai tài khoản"}), 401
@@ -50,28 +49,47 @@ def login():
         "user": row[0]
     })
 
-@app.route('/api/products', methods=['GET'])
+@app.route('/product/getProductsByCate', methods=['GET'])
 def get_products():
     # Lấy tham số 'cat' từ URL
     category = request.args.get('cat')
-    search_query = request.args.get('q')
 
-    conn = get_db_connection()
     cursor = conn.cursor()
     
-    if search_query:
-        query = "SELECT ProductID, Name, Price, Category, Image FROM tblProduct WHERE Name LIKE ?"
-        cursor.execute(query, ('%' + search_query + '%',))
-    elif category:
-        query = "SELECT ProductID, Name, Price, Category, Image FROM tblProduct WHERE Category = ?"
+    if category:
+        query = "SELECT ProductID, ProductName, Category, Price, ProductImage FROM tblProduct WHERE Category = ?"
         cursor.execute(query, (category,))
     else:
-        query = "SELECT ProductID, Name, Price, Category, Image FROM tblProduct"
+        query = "SELECT ProductID, ProductName, Price, Category, ProductImage FROM tblProduct"
         cursor.execute(query)
     
     rows = cursor.fetchall()
+
     products = [{"id": r[0], "name": r[1], "price": r[2], "category": r[3], "image": r[4]} for r in rows]
-    conn.close()
     return jsonify(products)
+
+# API lấy danh sách sản phẩm cho file shop.js của bạn
+# API lấy danh sách sản phẩm
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage FROM tblProduct")
+    
+    rows = cursor.fetchall()
+    result = []
+    for row in rows:
+        result.append({
+            "ProductID": row[0],
+            "ProductName": row[1],
+            "Category": row[2],
+            "Price": float(row[3]), 
+            "Stock": row[4], 
+            "Descript": row[5],
+            "Discount": row[6],    
+            "ProductImage": row[7]
+        })
+    return jsonify(result)
+
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=5000)
