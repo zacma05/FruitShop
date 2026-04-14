@@ -8,23 +8,66 @@ CORS(app)
 
 cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=ADMIN-PC;DATABASE=Fruitables;Trusted_Connection=yes'
 conn = pyodbc.connect(cn_str, autocommit=True)
+tokens = {}  # Lưu trữ token và AccountID tương ứng
+@app.route("/register", methods=["POST"])
+def register_api():
+    cursor = None
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        phone = data.get("phone")
+        address = data.get("address")
 
-@app.route("/")
-def home():
-    return render_template("index.html")
+        cursor = conn.cursor() # Khởi tạo cursor thủ công để dễ kiểm soát
+        
+        # 1. Kiểm tra trùng (Dùng COUNT cho nhanh)
+        cursor.execute("SELECT COUNT(*) FROM tblAccount WHERE UserName = ?", (username,))
+        if cursor.fetchone()[0] > 0:
+            return jsonify({"error": "Tên người dùng đã tồn tại"}), 409
 
+        # 2. Thêm tài khoản
+        cursor.execute(
+            "INSERT INTO tblAccount (UserName, Passwd, UserAddress, Phone, AccountRole) VALUES (?, ?, ?, ?, 'USER')",
+            (username, password, address, phone)
+        )
+        conn.commit() # Bắt buộc phải commit để lưu vào DB
+
+        cursor.execute("SELECT AccountID FROM tblAccount WHERE UserName = ?", (username,))
+        row = cursor.fetchone()
+        
+        if row:
+            account_id = row[0]
+            token = secrets.token_hex(32)
+            tokens[token] = account_id
+            return jsonify({
+                "message": "register success",
+                "token": token,
+                "accountID": account_id,
+                "user": username
+            })
+        
+        return jsonify({"error": "Lỗi lấy dữ liệu sau đăng ký"}), 500
+
+    except Exception as e:
+        print(f"LỖI SQL CHI TIẾT: {e}") 
+        if conn: conn.rollback() 
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor: cursor.close() 
+# API Đăng nhập
 @app.route("/login", methods=["POST"])
-def login():
+def login_api(): # Đổi tên hàm để không trùng
     data = request.get_json(force=True)
     username = data.get("username")
     password = data.get("password")
 
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT AccountID, UserName FROM tblAccount WHERE UserName = ? AND Passwd = ?",
-        (username, password)
-    )
-    row = cursor.fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT AccountID, UserName FROM tblAccount WHERE UserName = ? AND Passwd = ?",
+            (username, password)
+        )
+        row = cursor.fetchone()
 
     if not row:
         return jsonify({"error": "Sai tài khoản hoặc mật khẩu"}), 401

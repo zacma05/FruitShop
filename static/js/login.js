@@ -13,19 +13,20 @@ $("#loginForm").on("submit", function (e) {
             password: password
         }),
         success: function (res) {
+            console.log(res)
+
             if (res.token) {
                 localStorage.setItem("token", res.token);
                 localStorage.setItem("accountID", res.accountID);
                 localStorage.setItem("userName", res.user);
-
-                alert(`Chào mừng ${res.user} đã quay trở lại!`);
-
                 window.location.href = "index.html";
+            } else {
+                alert("Sai tài khoản")
             }
         },
-        error: function (xhr) {
-            const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : "Sai tài khoản hoặc mật khẩu!";
-            alert(errorMsg);
+        error: function (err) {
+            console.log(err);
+            alert("Login failed");
         }
     });
 });
