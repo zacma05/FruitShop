@@ -8,7 +8,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=LAPTOP-C8E5HODE;DATABASE=Fruitables;Trusted_Connection=yes'
+cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=ADMIN-PC;DATABASE=Fruitables;Trusted_Connection=yes'
 conn = pyodbc.connect(cn_str, autocommit=True)
 tokens = {}  # Lưu trữ token và AccountID tương ứng
 
@@ -271,47 +271,6 @@ def update_cart_quantity():
         conn.commit()
         return jsonify({"message": "Updated"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-## 4. API Search sản phẩm theo trong shop.html
-@app.route("/product/search", methods=["GET"])
-def search_products():
-    keyword = request.args.get("keyword", "").strip()
-
-    if not keyword:
-        return jsonify([])
-
-    like_keyword_start = f"{keyword}%"
-    like_keyword_full = f"%{keyword}%"
-
-    with conn.cursor() as cursor:
-        cursor.execute("""
-            SELECT TOP 50 ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage 
-            FROM tblProduct
-            WHERE ProductName COLLATE Latin1_General_CI_AI LIKE ?
-               OR ProductName COLLATE Latin1_General_CI_AI LIKE ?
-            ORDER BY 
-                CASE 
-                    WHEN ProductName COLLATE Latin1_General_CI_AI LIKE ? THEN 1
-                    ELSE 2
-                END
-        """, (like_keyword_start, like_keyword_full, like_keyword_start))
-        
-        rows = cursor.fetchall()  # dùng fetchall cho chắc
-
-    result = []
-    for row in rows:
-        result.append({
-            "ProductID": row[0],
-            "ProductName": row[1],
-            "Category": row[2],
-            "Price": float(row[3]),
-            "Stock": row[4],
-            "Descript": row[5],
-            "Discount": row[6],
-            "ProductImage": row[7]
-        })
-
-    return jsonify(result)
-    
+        return jsonify({"error": str(e)}), 500 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
