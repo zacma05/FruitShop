@@ -8,7 +8,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=ADMIN-PC;DATABASE=Fruitables;Trusted_Connection=yes'
+cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=LAPTOP-C8E5HODE;DATABASE=Fruitables;Trusted_Connection=yes'
 conn = pyodbc.connect(cn_str, autocommit=True)
 tokens = {}  # Lưu trữ token và AccountID tương ứng
 
@@ -190,6 +190,32 @@ def get_products_by_category(category_name):
         rows = cursor.fetchall()
         
     result = [{"ProductID": r[0], "ProductName": r[1], "Category": r[2], "Price": float(r[3]), "Stock": r[4], "Descript": r[5], "Discount": r[6], "ProductImage": r[7]} for r in rows]
+    return jsonify(result)
+# API lấy 10 sản phẩm bán chạy nhất (Dựa trên tiêu chí sắp cháy hàng)
+@app.route("/product/bestseller", methods=["GET"])
+def get_best_sellers():
+    with conn.cursor() as cursor:
+        # Lấy Top 10 sản phẩm có tồn kho ít nhất (ASC = Tăng dần)
+        cursor.execute("""
+            SELECT TOP 10 ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage 
+            FROM tblProduct 
+            WHERE Stock > 0 -- Có thể thêm điều kiện này để không lấy các sản phẩm đã hết sạch (Stock = 0)
+            ORDER BY Stock ASC
+        """)
+        rows = cursor.fetchall()
+        
+    result = []
+    for r in rows:
+        result.append({
+            "ProductID": r[0], 
+            "ProductName": r[1], 
+            "Category": r[2], 
+            "Price": float(r[3]), 
+            "Stock": r[4], 
+            "Descript": r[5], 
+            "Discount": r[6], 
+            "ProductImage": r[7]
+        })
     return jsonify(result)
 
 @app.route('/cart/add', methods=['POST'])

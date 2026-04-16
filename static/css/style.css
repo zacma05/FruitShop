@@ -6,6 +6,16 @@
     object-fit: cover; /* CỰC KỲ QUAN TRỌNG: Nó giúp ảnh không bị méo/bẹp khi bị ép chiều cao */
     object-position: center; /* Luôn lấy phần giữa của tấm ảnh */
 }
+.vegetable-carousel .owl-stage {
+            display: flex;
+            align-items: stretch;
+        }
+        .vegetable-carousel .owl-item {
+            display: flex;
+        }
+        .vegetable-carousel .owl-item > div {
+            width: 100%; /* Đảm bảo thẻ con chiếm trọn chiều rộng */
+        }
 #spinner {
     opacity: 0;
     visibility: hidden;

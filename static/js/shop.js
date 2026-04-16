@@ -83,11 +83,25 @@ function addToCart(productId) {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
-    fetchProducts();
+    // fetchProducts();
 
     const input = document.getElementById('search-input');
     const btn = document.getElementById('search-btn');
+    // 1. Đọc mật thư (keyword) trên đường link trình duyệt
+    const urlParams = new URLSearchParams(window.location.search);
+    const keywordFromUrl = urlParams.get('keyword');
 
+    // 2. Logic khởi động: Có mật thư thì tìm luôn, không có thì lấy tất cả
+    if (keywordFromUrl) {
+        // Điền chữ (ví dụ: "Táo") vào ô input cho người dùng nhìn thấy
+        if (input) input.value = keywordFromUrl; 
+        
+        // Gọi API tìm kiếm luôn
+        searchProducts(keywordFromUrl);
+    } else {
+        // Vào trang shop bình thường thì gọi tất cả sản phẩm
+        fetchProducts();
+    }
     if (!input || !btn) return;
 
     // Click search
@@ -99,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enter search
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
+            e.preventDefault();
             const keyword = input.value.trim();
             keyword ? searchProducts(keyword) : fetchProducts();
         }
