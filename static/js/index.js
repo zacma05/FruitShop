@@ -108,7 +108,6 @@ function loadBestSellers() {
                 let shortDesc = p.Descript ? p.Descript : "Sản phẩm bán chạy nhất trong tuần.";
                 if (shortDesc.length > 50) shortDesc = shortDesc.substring(0, 50) + "...";
 
-                // HTML này đã được tinh chỉnh cho khớp với Carousel của template
                 const html = `
                 <div class="border border-primary rounded position-relative vesitable-item h-100 d-flex flex-column m-2">
                     <div class="vesitable-img">

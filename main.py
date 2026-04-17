@@ -227,7 +227,7 @@ def remove_cart():
     conn.commit()
     return jsonify({"message": "Deleted"})
 
-# # 4. API Cập nhật số lượng (Dùng cho nút + / - trong cart.js)
+# 4. API Cập nhật số lượng (Dùng cho nút + / - trong cart.js)
 @app.route('/cart/update', methods=['POST'])
 def update_cart_quantity():
     data = request.json
@@ -255,7 +255,6 @@ def update_cart_quantity():
 def search_products():
     keyword = request.args.get('keyword', '')
     with conn.cursor() as cursor:
-        # Thêm COLLATE Latin1_General_CI_AI để bỏ qua dấu tiếng Việt khi tìm kiếm
         sql = """
     SELECT ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage 
     FROM tblProduct 
