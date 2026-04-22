@@ -1,16 +1,16 @@
 const API_BASE = "http://127.0.0.1:5000";
 let currentProductList = []; // Biến lưu trữ danh sách sản phẩm hiện tại để sort
+let currentPage = 1;
+const itemsPerPage = 6; // mỗi trang 6 sản phẩm
 
 
-
-// ================== RENDER ==================
 function renderProducts(products, isSorting = false) {
     const container = document.getElementById('product-container');
     if (!container) return;
 
-    // Nếu không phải đang sort thì mới cập nhật danh sách gốc
     if (!isSorting) {
         currentProductList = products;
+        currentPage = 1; // reset về trang 1 khi load mới
     }
 
     if (!products || products.length === 0) {
@@ -21,7 +21,10 @@ function renderProducts(products, isSorting = false) {
         return;
     }
 
-    container.innerHTML = products.map(p => `
+    const start = (currentPage - 1) * itemsPerPage;
+    const paginatedItems = currentProductList.slice(start, start + itemsPerPage);
+
+    container.innerHTML = paginatedItems.map(p => `
         <div class="col-md-6 col-lg-6 col-xl-4 mb-4">
             <div class="rounded position-relative fruite-item border border-secondary h-100 d-flex flex-column shadow-sm">
                 <div class="fruite-img">
@@ -47,13 +50,50 @@ function renderProducts(products, isSorting = false) {
             </div>
         </div>
     `).join('');
+
+    renderPagination(currentProductList.length);
+}
+// ================== PAGINATION LOGIC ==================
+function renderPagination(totalItems) {
+    const container = document.getElementById('pagination-container');
+    if (!container) return;
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    let html = '';
+    html += `
+        <a href="#" class="rounded ${currentPage === 1 ? 'disabled' : ''}" 
+           onclick="changePage(${currentPage - 1})">&laquo;</a>
+    `;
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        html += `
+            <a href="#" class="rounded ${i === currentPage ? 'active' : ''}" 
+               onclick="changePage(${i})">${i}</a>
+        `;
+    }
+
+    // Next
+    html += `
+        <a href="#" class="rounded ${currentPage === totalPages ? 'disabled' : ''}" 
+           onclick="changePage(${currentPage + 1})">&raquo;</a>
+    `;
+
+    container.innerHTML = html;
+}
+function changePage(page) {
+    const totalPages = Math.ceil(currentProductList.length / itemsPerPage);
+
+    if (page < 1 || page > totalPages) return;
+
+    currentPage = page;
+    renderProducts(currentProductList, true);
 }
 
-// ================== SORT LOGIC ==================
 function sortProducts(criteria) {
     if (!currentProductList || currentProductList.length === 0) return;
 
-    // Sao chép mảng để không ảnh hưởng mảng gốc khi sort
     let sortedData = [...currentProductList];
 
     switch (criteria) {
@@ -70,13 +110,17 @@ function sortProducts(criteria) {
             sortedData.sort((a, b) => b.ProductName.localeCompare(a.ProductName));
             break;
         default:
-            // Mặc định hoặc "Nothing": giữ nguyên/sắp xếp theo ID
             sortedData.sort((a, b) => a.ProductID - b.ProductID);
             break;
     }
 
-    // Render lại nhưng báo hiệu đây là hành động sort (không ghi đè currentProductList)
-    renderProducts(sortedData, true);
+    // 🔥 CẬP NHẬT DATA CHÍNH
+    currentProductList = sortedData;
+
+    // reset về page 1 khi sort
+    currentPage = 1;
+
+    renderProducts(currentProductList, true);
 }
 
 // ================== LOAD DATA ==================
