@@ -17,7 +17,6 @@ function loadProducts(apiUrl = "http://127.0.0.1:5000/product/getAllProduct") {
             data.forEach(p => {
                 let shortDesc = p.Descript ? p.Descript : "Chưa có mô tả cho sản phẩm này.";
                 if (shortDesc.length > 50) shortDesc = shortDesc.substring(0, 50) + "...";
-                
                 const html = `
                 <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                     <div class="rounded position-relative fruite-item border border-secondary h-100 d-flex flex-column">
@@ -49,7 +48,7 @@ function loadProducts(apiUrl = "http://127.0.0.1:5000/product/getAllProduct") {
 function searchProducts() {
     const keyword = $('#search-input').val().trim();
     if (keyword === '') {
-        loadProducts(); 
+        loadProducts();
     } else {
         loadProducts(`http://127.0.0.1:5000/product/search?keyword=${encodeURIComponent(keyword)}`);
     }
@@ -58,7 +57,7 @@ function searchProducts() {
 // 3. Hàm gọi API Lọc theo danh mục
 function filterCategory(categoryName) {
     if (categoryName === 'All') {
-        loadProducts(); 
+        loadProducts();
     } else {
         loadProducts(`http://127.0.0.1:5000/product/category/${encodeURIComponent(categoryName)}`);
     }
@@ -66,10 +65,10 @@ function filterCategory(categoryName) {
 
 // 4. Hàm thêm vào giỏ hàng
 function addToCart(productId) {
-    const userId = localStorage.getItem("accountID"); 
+    const userId = localStorage.getItem("accountID");
     if (!userId) {
         alert("Bạn cần đăng nhập để mua hàng!");
-        window.location.href = "login.html"; 
+        window.location.href = "login.html";
         return;
     }
 
@@ -78,9 +77,9 @@ function addToCart(productId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ account_id: userId, product_id: productId })
     })
-    .then(res => res.json())
-    .then(data => alert("Đã thêm vào giỏ hàng thành công!"))
-    .catch(err => alert("Lỗi kết nối server!"));
+        .then(res => res.json())
+        .then(data => alert("Đã thêm vào giỏ hàng thành công!"))
+        .catch(err => alert("Lỗi kết nối server!"));
 }
 
 // 5. Hàm lấy 10 sản phẩm bán chạy nhất (Chính là cái đang bị thiếu đây!)
@@ -96,7 +95,6 @@ function loadBestSellers() {
                 container.trigger('destroy.owl.carousel').removeClass('owl-loaded');
                 container.find('.owl-stage-outer').children().unwrap();
             }
-            
             container.empty();
 
             if (data.length === 0) {
@@ -107,8 +105,6 @@ function loadBestSellers() {
             data.forEach(p => {
                 let shortDesc = p.Descript ? p.Descript : "Sản phẩm bán chạy nhất trong tuần.";
                 if (shortDesc.length > 50) shortDesc = shortDesc.substring(0, 50) + "...";
-                
-                // HTML này đã được tinh chỉnh cho khớp với Carousel của template
                 const html = `
                 <div class="border border-primary rounded position-relative vesitable-item h-100 d-flex flex-column m-2">
                     <div class="vesitable-img">
@@ -137,18 +133,18 @@ function loadBestSellers() {
                 dots: true,
                 loop: true,
                 margin: 25,
-                nav : true,
-                navText : [
+                nav: true,
+                navText: [
                     '<i class="bi bi-arrow-left"></i>',
                     '<i class="bi bi-arrow-right"></i>'
                 ],
                 responsiveClass: true,
                 responsive: {
-                    0:{ items:1 },
-                    576:{ items:1 },
-                    768:{ items:2 },
-                    992:{ items:3 },
-                    1200:{ items:4 }
+                    0: { items: 1 },
+                    576: { items: 1 },
+                    768: { items: 2 },
+                    992: { items: 3 },
+                    1200: { items: 4 }
                 }
             });
         },
@@ -161,10 +157,10 @@ function loadBestSellers() {
 // 6. Chạy tự động lúc mới vào web
 $(document).ready(function () {
     // Mình vẫn giữ lại loadProducts() phòng khi bạn chưa xóa HTML phần Our Organic Products
-    loadProducts(); 
-    
+    loadProducts();
+
     // Gọi hàm load best seller
-    setTimeout(function() {
+    setTimeout(function () {
         loadBestSellers();
     }, 500);
 });

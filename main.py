@@ -8,7 +8,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=LAPTOP-C8E5HODE;DATABASE=Fruitables;Trusted_Connection=yes'
+cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=LAPTOP-C8E5HODE;DATABASE=Fruitables;Trusted_Connection=yes; MARS_Connection=yes'
 conn = pyodbc.connect(cn_str, autocommit=True)
 tokens = {}  # Lưu trữ token và AccountID tương ứng
 
@@ -274,7 +274,7 @@ def remove_cart():
     conn.commit()
     return jsonify({"message": "Deleted"})
 
-# # 4. API Cập nhật số lượng (Dùng cho nút + / - trong cart.js)
+# 4. API Cập nhật số lượng (Dùng cho nút + / - trong cart.js)
 @app.route('/cart/update', methods=['POST'])
 def update_cart_quantity():
     data = request.json
@@ -297,6 +297,65 @@ def update_cart_quantity():
         conn.commit()
         return jsonify({"message": "Updated"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
+@app.route("/product/search", methods=["GET"])
+def search_products():
+    keyword = request.args.get('keyword', '')
+    with conn.cursor() as cursor:
+        sql = """
+    SELECT ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage 
+    FROM tblProduct 
+    WHERE ProductName COLLATE Latin1_General_CI_AI LIKE ?
+    ORDER BY 
+        CASE 
+            WHEN ProductName LIKE ? THEN 1 -- Khớp chính xác cả dấu (Cà -> Cà rốt)
+            WHEN ProductName COLLATE Latin1_General_CI_AI LIKE ? THEN 2 -- Khớp không dấu (Ca -> Cà rốt)
+            ELSE 3 
+        END, ProductName
+"""
+# Truyền keyword vào 3 lần cho 3 dấu hỏi chấm
+        cursor.execute(sql, ('%' + keyword + '%', '%' + keyword + '%', '%' + keyword + '%'))
+        rows = cursor.fetchall()
+        
+    result = [{"ProductID": r[0], "ProductName": r[1], "Category": r[2], 
+               "Price": float(r[3]), "Stock": r[4], "Descript": r[5], 
+               "Discount": r[6], "ProductImage": r[7]} for r in rows]
+    return jsonify(result)
+# 2. API Lọc sản phẩm theo danh mục (Category)
+@app.route("/product/category/<category_name>", methods=["GET"])
+def get_products_by_category(category_name):
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage FROM tblProduct WHERE Category = ?", (category_name,))
+        rows = cursor.fetchall()
+        
+    result = [{"ProductID": r[0], "ProductName": r[1], "Category": r[2], "Price": float(r[3]), "Stock": r[4], "Descript": r[5], "Discount": r[6], "ProductImage": r[7]} for r in rows]
+    return jsonify(result)
+# API lấy 10 sản phẩm bán chạy nhất (Dựa trên tiêu chí sắp cháy hàng)
+@app.route("/product/bestseller", methods=["GET"])
+def get_best_sellers():
+    with conn.cursor() as cursor:
+        # Lấy Top 10 sản phẩm có tồn kho ít nhất (ASC = Tăng dần)
+        cursor.execute("""
+            SELECT TOP 10 ProductID, ProductName, Category, Price, Stock, Descript, Discount, ProductImage 
+            FROM tblProduct 
+            WHERE Stock > 0 -- Có thể thêm điều kiện này để không lấy các sản phẩm đã hết sạch (Stock = 0)
+            ORDER BY Stock ASC
+        """)
+        rows = cursor.fetchall()
+        
+    result = []
+    for r in rows:
+        result.append({
+            "ProductID": r[0], 
+            "ProductName": r[1], 
+            "Category": r[2], 
+            "Price": float(r[3]), 
+            "Stock": r[4], 
+            "Descript": r[5], 
+            "Discount": r[6], 
+            "ProductImage": r[7]
+        })
+    return jsonify(result)
+    
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
