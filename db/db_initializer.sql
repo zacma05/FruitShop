@@ -139,3 +139,14 @@ SELECT *
 FROM tblToken
 SELECT *
 FROM tblStore
+
+ALTER TABLE tblAccount ADD UserEmail NVARCHAR(255);
+GO
+
+-- 2. Cập nhật email mẫu cho các tài khoản đang có để test
+UPDATE tblAccount SET UserEmail = 'nguyenvanan@gmail.com' WHERE UserName = N'Nguyễn Văn An';
+UPDATE tblAccount SET UserEmail = 'phungtuandat@gmail.com' WHERE UserName = N'Phùng Tuấn Đạt';
+UPDATE tblAccount SET UserEmail = 'admin@fruitables.com' WHERE UserName = 'admin';
+UPDATE tblAccount SET UserEmail = 'vuminhhieu@gmail.com' WHERE UserName = N'Vũ Minh Hiếu';
+UPDATE tblAccount SET UserEmail = 'hoangductrong280805@gmail.com' WHERE UserName = N'Hoàng Đức Trọng';
+UPDATE tblAccount SET UserEmail = 'nguyenduyminh@gmail.com' WHERE UserName = N'Nguyễn Duy Minh';

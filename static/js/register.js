@@ -6,6 +6,7 @@ $("#registerForm").on("submit", function (e) {
     const confirmPassword = $("#confirmPassword").val();
     const phone = $("#phone").val();
     const address = $("#address").val();
+    const email = $("#email").val();
 
     console.log(password, confirmPassword);
 
@@ -22,7 +23,8 @@ $("#registerForm").on("submit", function (e) {
             username: username,
             password: password,
             phone: phone,
-            address: address
+            address: address,
+            email: email
         }),
         success: function (res) {
             if (res.token) {

@@ -80,35 +80,47 @@ function calculateFinalTotal() {
 }
 async function autofillUserInfo() {
     const token = localStorage.getItem("token");
-
-    // Nếu không có token (chưa đăng nhập) thì thôi, không fill
     if (!token) return;
 
     try {
         const res = await fetch("http://127.0.0.1:5000/account/getInfor", {
             method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}` // Gửi token lên để Backend xác thực
-            }
+            headers: { "Authorization": `Bearer ${token}` }
         });
 
         if (res.ok) {
             const user = await res.json();
+            const fullName = user.name ? user.name.trim() : "";
 
-            // Điền dữ liệu vào các ô đã đặt ID ở Bước 1
-            if (document.getElementById('billing-name')) {
-                document.getElementById('billing-name').value = user.name || "";
+            if (fullName) {
+                // Tách chuỗi bằng khoảng trắng
+                const nameParts = fullName.split(' ');
+
+                if (nameParts.length > 1) {
+                    // Họ là phần tử đầu tiên
+                    const lastName = nameParts[0]; 
+                    // Tên là tất cả các phần tử còn lại gộp lại
+                    const firstName = nameParts.slice(1).join(' '); 
+
+                    document.getElementById('billing-lastname').value = lastName;
+                    document.getElementById('billing-firstname').value = firstName;
+                } else {
+                    // Trường hợp tên chỉ có 1 chữ
+                    document.getElementById('billing-firstname').value = fullName;
+                    document.getElementById('billing-lastname').value = "";
+                }
             }
+
+            // Điền tiếp các thông tin khác
             if (document.getElementById('billing-address')) {
                 document.getElementById('billing-address').value = user.address || "";
             }
             if (document.getElementById('billing-phone')) {
                 document.getElementById('billing-phone').value = user.phone || "";
             }
-            console.log("Đã tự động điền thông tin mặc định!");
         }
     } catch (err) {
-        console.error("Lỗi khi lấy thông tin người dùng:", err);
+        console.error("Lỗi autofill:", err);
     }
 }
 // 3. Lắng nghe sự kiện thay đổi phí ship khi người dùng click chọn

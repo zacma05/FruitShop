@@ -211,7 +211,21 @@ function addToCart(productId) {
 
 // ================== KHỞI TẠO ==================
 document.addEventListener('DOMContentLoaded', () => {
-    shopLoadProducts();
+    // 1. "Bắt" từ khóa từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const keyword = urlParams.get('keyword');
+
+    if (keyword) {
+        // Nếu có keyword (ví dụ: Táo), gọi hàm load với keyword đó
+        shopLoadProducts(keyword);
+        
+        // Tiện tay điền luôn chữ "Táo" vào ô tìm kiếm cho người dùng thấy
+        const input = document.getElementById('search-input');
+        if (input) input.value = keyword;
+    } else {
+        // Nếu không có gì trên URL thì load tất cả như cũ
+        shopLoadProducts();
+    }
     setupSearch();
     setupPriceFilter();
     loadCategoryCounts();
