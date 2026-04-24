@@ -112,3 +112,13 @@ CREATE TABLE tblToken
     REFERENCES tblAccount(AccountID)
 	ON DELETE CASCADE
 )
+
+CREATE TABLE tblStore
+(
+	StoreID INT PRIMARY KEY IDENTITY(1,1),
+	StoreName NVARCHAR(255) not null,
+	StoreAddress NVARCHAR(255) not null,
+	lat FLOAT,
+	lng FLOAT
+);
+

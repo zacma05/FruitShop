@@ -8,10 +8,11 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=ADMIN-PC;DATABASE=Fruitables;Trusted_Connection=yes;MARS_Connection=yes'
+cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=DATPHUNG;DATABASE=Fruitables;Trusted_Connection=yes;MARS_Connection=yes'
 conn = pyodbc.connect(cn_str, autocommit=True)
 tokens = {}  # Lưu trữ token và AccountID tương ứng
 
+# Annotation yêu cầu token khi gọi api
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -35,6 +36,7 @@ def token_required(f):
 
     return decorated
 
+# Đăng ký
 @app.route("/register", methods=["POST"])
 def register_api():
     cursor = None
@@ -268,7 +270,9 @@ def update_cart_quantity():
         return jsonify({"message": "Updated"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 @app.route("/product/search", methods=["GET"])
+
 def search_products():
     keyword = request.args.get('keyword', '')
     with conn.cursor() as cursor:
@@ -291,6 +295,7 @@ def search_products():
                "Price": float(r[3]), "Stock": r[4], "Descript": r[5], 
                "Discount": r[6], "ProductImage": r[7]} for r in rows]
     return jsonify(result)
+
 # 2. API Lọc sản phẩm theo danh mục (Category)
 @app.route("/product/category/<category_name>", methods=["GET"])
 def get_products_by_category(category_name):
@@ -300,6 +305,7 @@ def get_products_by_category(category_name):
         
     result = [{"ProductID": r[0], "ProductName": r[1], "Category": r[2], "Price": float(r[3]), "Stock": r[4], "Descript": r[5], "Discount": r[6], "ProductImage": r[7]} for r in rows]
     return jsonify(result)
+
 # API lấy 10 sản phẩm bán chạy nhất (Dựa trên tiêu chí sắp cháy hàng)
 @app.route("/product/bestseller", methods=["GET"])
 def get_best_sellers():
@@ -327,5 +333,41 @@ def get_best_sellers():
         })
     return jsonify(result)
     
+### CONTACT
+# Lấy thông tin địa chỉ các cửa hàng
+@app.route("/store/getAll", methods=["GET"])
+def get_store_infor():
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT StoreID, StoreName, StoreAddress 
+            FROM tblStore
+        """)
+        rows = cursor.fetchall()
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "name": r[1],
+            "address": r[2]
+        })
+    return jsonify(result) 
+
+@app.route("/store/updateLocation", methods=["PUT"])
+def update_store_location():
+    data = request.get_json()
+    id = data.get('id')
+    lat = data.get('lat')
+    lng = data.get('lng')
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            UPDATE tblStore
+            SET lat = ? , lng = ? where StoreID = ?
+        """, (lat, lng, id))
+        if cursor.rowcount == 0:
+            return jsonify({"error": "There's an error while commiting sql query"})
+    return jsonify({"message": "Update location successfully for Stor with id: " + str(id)})
+
+
+
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
