@@ -10,7 +10,7 @@ from flask_mail import Mail, Message
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=ADMIN-PC;DATABASE=Fruitables;Trusted_Connection=yes;MARS_Connection=yes'
+cn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=LAPTOP-C8E5HODE;DATABASE=Fruitables;Trusted_Connection=yes; MARS_Connection=yes'
 conn = pyodbc.connect(cn_str, autocommit=True)
 tokens = {}  # Lưu trữ token và AccountID tương ứng
 
@@ -48,18 +48,19 @@ def register_api():
         password = data.get("password")
         phone = data.get("phone")
         address = data.get("address")
+        email = data.get("email")
 
         cursor = conn.cursor()
         
         # 1. Kiểm tra trùng (Dùng COUNT cho nhanh)
-        cursor.execute("SELECT COUNT(*) FROM tblAccount WHERE UserName = ?", (username,))
+        cursor.execute("SELECT COUNT(*) FROM tblAccount WHERE UserName = ? OR UserEmail = ?", (username, email))
         if cursor.fetchone()[0] > 0:
-            return jsonify({"error": "Tên người dùng đã tồn tại"}), 409
+            return jsonify({"error": "Tên người dùng hoặc email đã tồn tại"}), 409
 
         # 2. Thêm tài khoản
         cursor.execute(
-            "INSERT INTO tblAccount (UserName, Passwd, UserAddress, Phone, AccountRole) VALUES (?, ?, ?, ?, 'USER')",
-            (username, password, address, phone)
+            "INSERT INTO tblAccount (UserName, Passwd, UserAddress, Phone, AccountRole, UserEmail) VALUES (?, ?, ?, ?, 'USER', ?)",
+            (username, password, address, phone, email)
         )
         conn.commit() # Bắt buộc phải commit để lưu vào DB
 
@@ -156,7 +157,7 @@ def get_info():
 
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT AccountID, UserName, Passwd, UserAddress, Phone, AccountRole 
+        SELECT AccountID, UserName, Passwd, UserAddress, Phone, AccountRole, UserEmail
         FROM tblAccount WHERE AccountID = ?
         """, (id,)
     )
@@ -170,7 +171,8 @@ def get_info():
             "password": row[2],
             "address": row[3],
             "phone": row[4],
-            "role": row[5]
+            "role": row[5],
+            "email": row[6]
         })
     
     conn.commit()
@@ -439,6 +441,5 @@ def subscribe():
         # In ra log không dấu để tránh crash terminal Windows
         print(f"Mail System Error: {str(e)}") 
         return jsonify({"error": "He thong mail dang bao tri, thu lai sau!"}), 500
-
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

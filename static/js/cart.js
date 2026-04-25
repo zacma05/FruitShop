@@ -156,7 +156,6 @@ $('#btn-apply-coupon').on('click', async function () {
         }
 
         alert(data.message);
-
         // Lưu thông tin mã vào LocalStorage để mang sang trang Checkout
         localStorage.setItem('appliedCoupon', JSON.stringify({
             id: data.CouponID,

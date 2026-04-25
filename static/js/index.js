@@ -14,8 +14,7 @@ function loadProducts(apiUrl = "http://127.0.0.1:5000/product/getAllProduct") {
 
             data.forEach(p => {
                 let shortDesc = p.Descript ? p.Descript : "Chưa có mô tả cho sản phẩm này.";
-                if (shortDesc.length > 50) shortDesc = shortDesc.substring(0, 50) + "...";
-
+                if (shortDesc.length > 30) shortDesc = shortDesc.substring(0, 30) + "...";
                 const html = `
                 <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                     <div class="rounded position-relative fruite-item border border-secondary h-100 d-flex flex-column">
@@ -23,10 +22,10 @@ function loadProducts(apiUrl = "http://127.0.0.1:5000/product/getAllProduct") {
                             <img src="/static/img/products/${p.ProductImage}" class="img-fluid w-100 rounded-top" style="height:200px; object-fit:cover;" alt="${p.ProductName}">
                         </div>
                         <div class="p-4 flex-grow-1 d-flex flex-column">
-                            <h4>${p.ProductName}</h4>
+                            <h4 class="text-primary">${p.ProductName}</h4>
                             <p class="flex-grow-1 text-truncate" style="white-space: normal;">${shortDesc}</p>
                             <div class="d-flex justify-content-between flex-lg-wrap mt-auto">
-                                <p class="text-dark fs-5 fw-bold mb-0">${p.Price.toLocaleString('vi-VN')} VNĐ</p>
+                                <p class="text-dark fs-5 fw-bold mb-0">${formatVND(p.Price)}</p>
                                 <button onclick="addToCart(${p.ProductID})" class="btn border border-secondary rounded-pill px-3 text-primary">
                                     <i class="fa fa-shopping-bag me-2 text-primary"></i> Add
                                 </button>
@@ -94,7 +93,6 @@ function loadBestSellers() {
                 container.trigger('destroy.owl.carousel').removeClass('owl-loaded');
                 container.find('.owl-stage-outer').children().unwrap();
             }
-
             container.empty();
 
             if (data.length === 0) {
@@ -105,7 +103,6 @@ function loadBestSellers() {
             data.forEach(p => {
                 let shortDesc = p.Descript ? p.Descript : "Sản phẩm bán chạy nhất trong tuần.";
                 if (shortDesc.length > 50) shortDesc = shortDesc.substring(0, 50) + "...";
-
                 const html = `
                 <div class="border border-primary rounded position-relative vesitable-item h-100 d-flex flex-column m-2">
                     <div class="vesitable-img">
